@@ -1,0 +1,17 @@
+[project]
+name = "fraud_detection"
+version = "0.1.0"
+description = "Fraud Detection System"
+
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["cli", "generators", "models", "utils"]
