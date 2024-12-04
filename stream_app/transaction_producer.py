@@ -67,30 +67,35 @@ class KafkaTransactionProducer:
         user_id = random.choice(list(self.user_store.state_store.keys()))
         return self.user_store.get_user_profile(user_id)
     
-    def _json_dump(self, transaction: Transaction):
-        transaction_dict = transaction.model_dump()
-        transaction_dict['timestamp'] = int(transaction_dict['timestamp'].timestamp())
-        transaction_dict['transaction_type'] = transaction_dict['transaction_type'].value
-        return json.dumps(transaction_dict)
+    def to_dict(self, transaction: Transaction):
+        transaction_dict = {
+            'transaction_id': transaction.transaction_id,
+            'user_id': transaction.user_id,
+            'txn_time': int(transaction.timestamp.timestamp()), 
+            'amount': transaction.amount,
+            'location': transaction.location.country,
+            'transaction_type': transaction.transaction_type.value
+        }
+        return transaction_dict
+
     
     def send_transaction(self, transaction: Transaction ):
 
-        transaction = self._json_dump(transaction)
+        transaction = self.to_dict(transaction)
         try:
             future = self.producer.send(
                 self.topic_name,
                 value = transaction,
-                #key = str(transaction['user_id'].encode('utf-8'))
             ) 
             record_metadata = future.get(timeout = 10)
 
             if record_metadata.offset %10 ==0:
-                print(
-                    f"Transaction sent - Topic: {record_metadata.topic}, "
-                    f"Partition: {record_metadata.partition}, "
-                    f"Offset: {record_metadata.offset}",
-                    f"Data: {transaction}",
-                    )
+                logger.info(
+                f"Transaction sent - Topic: {record_metadata.topic}, "
+                f"Partition: {record_metadata.partition}, "
+                f"Offset: {record_metadata.offset}, "
+                f"Data: {transaction}"
+            )
         except Exception as e:
             logger.error(f"Error sending transaction: {transaction}\nError: {str(e)}")
  
@@ -133,7 +138,7 @@ class KafkaTransactionProducer:
 def main():
     KAFKA_CONFIG = {
         'bootstrap_servers': 'localhost:9092',
-        'topic_name': 'transactions'
+        'topic_name': 'transaction'
     }
 
     try:
