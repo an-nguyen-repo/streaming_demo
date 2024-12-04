@@ -3,11 +3,22 @@ from pydantic import BaseModel, Field
 from datetime import datetime 
 from enum import Enum
 from typing import NamedTuple, Union
-import uuid
 from faker import Faker
 import src.utils.utils  as ut 
+import time 
+import random 
+import string 
+
 
 fake = Faker()
+
+
+def generate_id():
+   timestamp = str(int(time.time() * 1000))
+   random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+   return f"{timestamp}{random_chars}"
+
+
 class Location(BaseModel):
     country: str = ''
 
@@ -45,18 +56,20 @@ class TransactionConstants:
     
 
 class Transaction(BaseModel):
-    transaction_id: str = f'txn-{uuid.uuid4()}'
+    transaction_id: str = ''
     user_id: str 
     amount: float = Field(default= 0 ,ge =0)
     timestamp: datetime = datetime.now()
     location: Location = Location()
     transaction_type: TransactionType = TransactionType.NORMAL
 
+    def model_post_init(self, __context__):
+        self.transaction_id = f"txn-{generate_id()}" 
 
 class UserProfile(BaseModel):
-    user_id: str = f'user-{uuid.uuid4()}'
+    user_id: str = ''
     created_date: datetime = datetime.now()
-    main_location: Location = Location(country = fake.country())
+    main_location: Location = ''
     #transaction base 
     average_amt: float = 0
     total_amt: float = 0.0
@@ -64,6 +77,10 @@ class UserProfile(BaseModel):
     last_txn_timestamp: datetime = datetime(1970,1,1)
     last_txn_location: Location = Location()
 
+    def model_post_init(self, __context__):
+        self.user_id = f"user-{generate_id()}" 
+        faker = Faker()
+        self.main_location = Location(country = faker.country())
 
     def has_no_transact_history(self):
         return self.txn_count ==0 

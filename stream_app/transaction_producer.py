@@ -8,7 +8,7 @@ import random
 import time
 
 
-TRANSACTION_PER_SEC = 100
+TRANSACTION_PER_SEC = 10
 FRAUD_TXN_INGEST_INTERVAL = 1000 # Random n fraud transaction within this interval
 FRAUD_COUNTER_RANGE = (0, 20)
 
@@ -35,6 +35,7 @@ class KafkaTransactionProducer:
         self.user_store = UserStoreManager()
         self.n_users = n_users
         self._bootstrap_user_base()
+        print(self.user_store.user_count)
 
     def _bootstrap_user_base(self, ):
         for i in range(self.n_users):
@@ -43,6 +44,8 @@ class KafkaTransactionProducer:
                 user_id = user_profile.user_id,
                 updated_profile= user_profile
             )
+
+        
 
     def define_fraud_txn_index(self, ):
         n_fraud_within_interval = random.randint(a = FRAUD_COUNTER_RANGE[0], b = FRAUD_COUNTER_RANGE[1])
@@ -80,9 +83,14 @@ class KafkaTransactionProducer:
                 #key = str(transaction['user_id'].encode('utf-8'))
             ) 
             record_metadata = future.get(timeout = 10)
-            logger.info(f"Transaction sent - Topic: {record_metadata.topic}, "
-                       f"Partition: {record_metadata.partition}, "
-                       f"Offset: {record_metadata.offset}")
+
+            if record_metadata.offset %10 ==0:
+                print(
+                    f"Transaction sent - Topic: {record_metadata.topic}, "
+                    f"Partition: {record_metadata.partition}, "
+                    f"Offset: {record_metadata.offset}",
+                    f"Data: {transaction}",
+                    )
         except Exception as e:
             logger.error(f"Error sending transaction: {transaction}\nError: {str(e)}")
  

@@ -1,7 +1,6 @@
 pyproject.toml
 src/__init__.py
 src/cli/__init__.py
-src/cli/transaction_producer.py
 src/fraud_detection.egg-info/PKG-INFO
 src/fraud_detection.egg-info/SOURCES.txt
 src/fraud_detection.egg-info/dependency_links.txt

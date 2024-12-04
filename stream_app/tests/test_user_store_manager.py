@@ -27,3 +27,9 @@ def test_user_store_update_state_store():
 
     assert user_store.user_count == 1 
 
+def test_user_store_create_multiple_users():
+    user_store = UserStoreManager()
+
+    for i in range(1000):
+        user_profile = user_store.create_empty_profile()
+        print(i, user_profile)
