@@ -38,9 +38,7 @@ class FraudWindowAggregator(ProcessWindowFunction):
 
         if base_txn['fraud_score'] >=2:
             base_txn['transaction_type'] ='Fraud'
-            yield json.dumps(base_txn)
-
-        yield None 
+        yield json.dumps(base_txn)
 
 
 
@@ -68,7 +66,7 @@ def create_kafka_source() -> KafkaSource:
 def create_kafka_sink() -> KafkaSink:
     # Create serialization schema for the sink
     serialization_schema = KafkaRecordSerializationSchema.builder() \
-        .set_topic("transaction-fraud") \
+        .set_topic("transaction-final") \
         .set_value_serialization_schema(SimpleStringSchema()) \
         .build()
     
@@ -112,9 +110,10 @@ def main():
             .key_by(lambda x: x['transaction_id'])
             .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
             .process(FraudWindowAggregator(), output_type = Types.STRING())
-            .filter(lambda x: x  is not None )
+            #.filter(lambda x: x  is not None )
         )
 
+        ds.print() 
 
         ds.sink_to(kafka_sink)
 

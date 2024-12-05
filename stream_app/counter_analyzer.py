@@ -120,7 +120,7 @@ def main():
             .map(lambda x: x , output_type=Types.STRING())
         )
 
-
+        ds.print() 
         ds.sink_to(kafka_sink)
 
         
