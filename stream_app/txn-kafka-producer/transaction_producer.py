@@ -137,7 +137,7 @@ class KafkaTransactionProducer:
 
 def main():
     KAFKA_CONFIG = {
-        'bootstrap_servers': 'kafka:29092',
+        'bootstrap_servers': 'kafka:9092',
         'topic_name': 'transaction'
     }
 
