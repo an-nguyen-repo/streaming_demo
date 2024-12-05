@@ -55,7 +55,7 @@ def create_kafka_source() -> KafkaSource:
     }
     
     return KafkaSource.builder() \
-        .set_bootstrap_servers('kafka:9092') \
+        .set_bootstrap_servers('localhost:29092') \
         .set_topics('transaction-scored') \
         .set_group_id('scorer-analyzer-group') \
         .set_starting_offsets(KafkaOffsetsInitializer.earliest()) \
@@ -72,7 +72,7 @@ def create_kafka_sink() -> KafkaSink:
     
     # Create and configure the Kafka sink
     return KafkaSink.builder() \
-        .set_bootstrap_servers('kafka:9092') \
+        .set_bootstrap_servers('localhost:29092') \
         .set_record_serializer(serialization_schema) \
         .build()
 
@@ -108,7 +108,7 @@ def main():
             )
             .map(TransactionParser())
             .key_by(lambda x: x['transaction_id'])
-            .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
+            .window(TumblingProcessingTimeWindows.of(Time.seconds(1)))
             .process(FraudWindowAggregator(), output_type = Types.STRING())
             #.filter(lambda x: x  is not None )
         )

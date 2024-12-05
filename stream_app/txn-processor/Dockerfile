@@ -10,8 +10,8 @@ COPY proximity_analyzer.py  ./
 COPY requirements.txt  ./
 COPY score_aggregator.py  ./
 
-
-RUN pip install --no-cache-dir -r requirements.txt
+#RUN python -m pip install apache-flink
+RUN pip install  -r requirements.txt
 
 COPY wait-for-it.sh ./
 RUN chmod +x wait-for-it.sh
