@@ -4,16 +4,13 @@ WORKDIR /app
 
 COPY requirements.txt pyproject.toml ./
 COPY transaction_producer.py ./
-RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip uninstall kafka --yes
-RUN pip install kafka 
-RUN pip install kafka-python 
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
 COPY tests/ ./tests/
 
-RUN pip install -e .
+RUN pip install  .
 
 COPY wait-for-it.sh ./
 RUN chmod +x wait-for-it.sh
