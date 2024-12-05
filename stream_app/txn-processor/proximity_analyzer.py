@@ -12,8 +12,6 @@ from pyflink.common import WatermarkStrategy
 import json, os 
 import logging
 from pyflink.datastream.state import ValueStateDescriptor
-from pyflink.datastream.connectors import FileSink
-from pyflink.common.serialization import Encoder
 from pyflink.common import Types
 
 logging.basicConfig(level=logging.INFO)
@@ -71,7 +69,7 @@ def create_kafka_source() -> KafkaSource:
     }
     
     return KafkaSource.builder() \
-        .set_bootstrap_servers('localhost:9092') \
+        .set_bootstrap_servers('kafka:9092') \
         .set_topics('transaction') \
         .set_group_id('proximity-analyzer-group') \
         .set_starting_offsets(KafkaOffsetsInitializer.earliest()) \
@@ -88,7 +86,7 @@ def create_kafka_sink() -> KafkaSink:
     
     # Create and configure the Kafka sink
     return KafkaSink.builder() \
-        .set_bootstrap_servers('localhost:9092') \
+        .set_bootstrap_servers('kafka:9092') \
         .set_record_serializer(serialization_schema) \
         .build()
 
