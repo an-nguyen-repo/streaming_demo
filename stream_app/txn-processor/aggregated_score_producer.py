@@ -15,11 +15,17 @@ conn = psycopg2.connect(
     dbname="frauddb",
     user="myuser",
     password="mypassword",
-    host="localhost",
+    host="postgres",
     port="5432"
 )
 cursor = conn.cursor()
 
+# DELETE  table 
+cursor.execute("""
+    DROP TABLE IF EXISTS fraud_events 
+""")
+conn.commit()
+print('CLEAN fraud_events TABLE')
 
 # Create table (adjust schema according to your data)
 cursor.execute("""
@@ -34,6 +40,7 @@ cursor.execute("""
         fraud_score  INT
     )
 """)
+print('CREATE fraud_events TABLE')
 conn.commit()
 
 # Consume messages and insert into PostgreSQL
@@ -44,7 +51,7 @@ insert_query = """
         transaction_id, user_id, txn_time, amount,location, transaction_type, fraud_score
     ) VALUES (%s, %s, %s, %s, %s, %s, %s)
 """
-
+counter = 0 
 
 try:
     for message in consumer:
@@ -58,7 +65,8 @@ try:
                 data['transaction_type'],
                 data['fraud_score']
             ))
-        
+        print(f'Flush data - batch index {counter} - Total messages: {counter * batch_size}')
+        counter += 1 
         if len(batch) >= batch_size:
             execute_batch(cursor, insert_query, batch)
             conn.commit()

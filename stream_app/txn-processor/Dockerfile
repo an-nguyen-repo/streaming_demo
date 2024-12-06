@@ -1,36 +1,20 @@
-FROM ubuntu:20.04
+FROM apache/flink:1.20-java11
 
-ENV DEBIAN_FRONTEND=noninteractive
+# install python3 and pip3
+RUN apt-get update -y && \
+apt-get install -y python3 python3-pip python3-dev && rm -rf /var/lib/apt/lists/*
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
-RUN apt-get update && \
-    apt-get install -y \
-    openjdk-11-jdk \
-    python3.8 \
-    python3.8-dev \
-    python3-pip \
-    build-essential
+# install PyFlink
+RUN pip3 install --no-cache-dir apache-flink
+RUN pip3 install kafka-python
+RUN pip3 install psycopg2-binary
 
-# First determine the architecture and set JAVA_HOME accordingly
-RUN arch=$(dpkg --print-architecture) && \
-    if [ "$arch" = "arm64" ]; then \
-        echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-arm64" >> /etc/environment; \
-    else \
-        echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> /etc/environment; \
-    fi
-
-# Use a shell to set the ENV variable
-RUN . /etc/environment && \
-    echo "export JAVA_HOME=$JAVA_HOME" > /etc/profile.d/java_home.sh
-
-ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
-
-WORKDIR /app
-
+# Copy application files
 COPY *.py *.jar requirements.txt ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy and prepare scripts
+COPY wait-for-it.sh start.sh ./
+RUN chmod +x wait-for-it.sh start.sh
 
-# COPY wait-for-it.sh start.sh ./
-# RUN chmod +x wait-for-it.sh start.sh
-
-# CMD ["./start.sh"]
+#CMD ["./start.sh"]
