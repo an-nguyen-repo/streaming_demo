@@ -11,10 +11,9 @@ RUN pip3 install kafka-python
 RUN pip3 install psycopg2-binary
 
 # Copy application files
-COPY *.py *.jar requirements.txt ./
+COPY *.py *.jar  ./
 
 # Copy and prepare scripts
-COPY wait-for-it.sh start.sh ./
-RUN chmod +x wait-for-it.sh start.sh
+COPY wait-for-it.sh  ./
+RUN chmod +x wait-for-it.sh 
 
-#CMD ["./start.sh"]
