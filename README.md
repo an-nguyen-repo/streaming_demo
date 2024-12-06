@@ -43,29 +43,29 @@ docker-compose up -d
 ## CHECKING TRANSACTION PRODUCER 
 Checking producer terminal logs 
 ```
-docker logs 
+docker logs frauddetectionstreaming-txn-kafka-producer-1
 ```
 
 
 Checking kafka `transaction` topic 
 ```
-docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic transaction --from-beginning
+docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server kafka:9092 --topic transaction --from-beginning
 ```
 
 ## CHECKING ANALYZER PROCESSOR 
 Checking producer terminal logs 
 ``` 
-docker logs
+docker logs frauddetectionstreaming-txn-anverage-analyzer-1
 ```
 
 Checking kafka `transaction-scored` topic 
 ```
-docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic transaction-scored --from-beginning
+docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server kafka:9092 --topic transaction-scored --from-beginning
 ```
 
 Checking kafka `transaction-final` topic 
 ```
-docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic transaction-final --from-beginning
+docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server kafka:9092 --topic transaction-final --from-beginning
 ```
 
 ## CHECKING POSTGRES
