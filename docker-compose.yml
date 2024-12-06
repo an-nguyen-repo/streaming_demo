@@ -31,6 +31,7 @@ services:
       test: nc -z localhost 29092
       interval: 10s
       retries: 3
+
   txn-kafka-producer:
     image: txn-kafka-producer
     depends_on:
@@ -57,5 +58,89 @@ services:
       timeout: 5s
       retries: 5
 
+  txn-anverage-analyzer:
+    image: txn-processor
+    command: /bin/bash -c "python average_analyzer.py"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_SERVER: "kafka:29092"
+      ZOOKEEPER_SERVER: "zookeeper:2181"
+      PRODUCER_INTERVAL: 100
+
+  txn-proximity-analyzer:
+    image: txn-processor
+    command: /bin/bash -c "python proximity_analyzer.py"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_SERVER: "kafka:29092"
+      ZOOKEEPER_SERVER: "zookeeper:2181"
+      PRODUCER_INTERVAL: 100
+
+  txn-counter-analyzer:
+    image: txn-processor
+    command: /bin/bash -c "python counter_analyzer.py"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_SERVER: "kafka:29092"
+      ZOOKEEPER_SERVER: "zookeeper:2181"
+      PRODUCER_INTERVAL: 100
+
+  txn-score-aggregator:
+    image: txn-processor
+    command: /bin/bash -c "python score_aggregator.py"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_SERVER: "kafka:29092"
+      ZOOKEEPER_SERVER: "zookeeper:2181"
+      PRODUCER_INTERVAL: 100
+
+  txn-aggregated-score-producer:
+    image: txn-processor
+    command: /bin/bash -c "python aggregated_score_producer.py"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      KAFKA_SERVER: "kafka:29092"
+      ZOOKEEPER_SERVER: "zookeeper:2181"
+      PRODUCER_INTERVAL: 100
+  
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      GF_AUTH_DISABLE_LOGIN_FORM: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      postgres:
+        condition: service_healthy
 volumes:
   postgres_data:
+  grafana-storage:
