@@ -1,41 +1,83 @@
 
-# cd to current directory 
+# HOW TO RUN 
+1. cd to current directory 
+```
+cd FraudDetectionStreaming
+```
 
+2. Build docker image 
+Build docker image for kafka transaction producer. This producer will generate fake transaction with configurable transaction rate per second, fraud transaction rate per 1000 transaction and input into kafka topic `transaction`
+
+```
+cd stream-app/txn-kafka-producer
+docker build -t txn-kafka-producer . 
+cd ..
+```
+
+Build docker iamge for transaction producer. This create flink env for:
+- AverageAnalyzer: read from kafka topic `transaction` compare current transaction with user all time average spending. Mark fraud_score=1 if average >=3 time global average. Input into kafka topic `transaction-scored`
+- CounterAnalyazr: read from kafka topic `transaction` compare curernt transactime time with previous transaction. Mark fraud_score= 1 if current transaction is too close with previous transaction. Input into kafka topic `transaction-scored`
+- ProximityAnalyzer: read from kafka topic `transaction` compare current location with previos transaciton location. Mark fraud_score =1 if current location is diff from previous transaction. Input into kafka topic `transaction-scored`
+- ScoreAggrigator: read from kafka topic `transaction-scored`. Key by transaction window by session. Sum up fraud_score. Mark transaction type = form if fraud_score >=2. Input into kafka topic `transaction-final`
+- AggregatedScoreProducer: read from kafka topic `transaction-final`. Create table fraud_events in postgres. Batch insert into postgress every 100 transaction received 
+```
+cd  stream-app/txn-processor
+docker build -t txn-processor .
+cd ..
+```
+
+3. Run all service 
+This will start 
+- An instance of txn-kafka-producer to produce input transaction
+- 5 instance of txn-processor for each of above flink processor 
+- An instance of postgres
+- An instance of kafka + zookeeper
+- An instance of grafana
+
+```
 docker-compose up -d 
+```
 
-# python env 
-cd stream_app
-python3.8 -m venv .stream-app
-source .stream-app/bin/activate
-pip install -r requirements.txt 
-pip install -e .
-python -m pip install apache-flink
+# ANALYSYS 
 
-# in a separte terminal: cd to stream_app
-python3 transaction_producer.py
-
-# in a separte terminal: cd to stream_app
-python3 anverage_analyzer.py
-# in a separte terminal: cd to stream_app
-python3 counter_analyzer.py
-# in a separte terminal: cd to stream_app
-python3 proximity_analyzer.py
-# in a separte terminal: cd to stream_app
-python3 score_aggregator.py
+## CHECKING TRANSACTION PRODUCER 
+Checking producer terminal logs 
+```
+docker logs 
+```
 
 
-# in seperate terminal - check kafka 
+Checking kafka `transaction` topic 
+```
+docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic transaction --from-beginning
+```
 
-docker exec -it broker kafka-console-consumer  \
-    --bootstrap-server localhost:9092 \
-    --topic transaction
+## CHECKING ANALYZER PROCESSOR 
+Checking producer terminal logs 
+``` 
+docker logs
+```
 
-OR 
+Checking kafka `transaction-scored` topic 
+```
+docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic transaction-scored --from-beginning
+```
 
-docker exec -it broker kafka-console-consumer  \
-    --bootstrap-server localhost:9092 \
-    --topic transaction-scored
+Checking kafka `transaction-final` topic 
+```
+docker exec -it frauddetectionstreaming-kafka-1 kafka-console-consumer --bootstrap-server localhost:9092 --topic transaction-final --from-beginning
+```
 
-docker exec -it broker kafka-console-consumer  \
-    --bootstrap-server localhost:9092 \
-    --topic transaction-fraud  
+## CHECKING POSTGRES
+```
+docker exec -it postgres psql -U myuser -d frauddb
+```
+
+Check table data 
+```
+select count(*) from fraud_events;
+```
+
+## CHECKING GRAFANA 
+
+At localhost:3001 web UI
