@@ -1,5 +1,6 @@
 
 # HOW TO RUN 
+0. Start Docker desktop 
 1. cd to current directory 
 ```
 cd FraudDetectionStreaming
